@@ -33,26 +33,12 @@ BOARD_MKBOOTIMG_ARGS := --dt device/lge/d851/dtb --kernel_offset 0x0008000 --ram
 # prebuilt kernel
 TARGET_PREBUILT_KERNEL := device/lge/d851/kernel
 # else uncomment below to build from sauce
-# TARGET_KERNEL_SOURCE := kernel/lge/d851
-# TARGET_KERNEL_CONFIG := cyanogen_d851_defconfig
+# TARGET_KERNEL_SOURCE := kernel/lge/g3
+# TARGET_KERNEL_CONFIG := cyanogenmod_d851_defconfig
 # apparently this dont work but should ;x
 # TARGET_KERNEL_APPEND_DTB := true
 # use this instead
 # BOARD_KERNEL_IMAGE_NAME := zImage-dtb
-
-# Kernel & ToolChains
-#TARGET_KERNEL_CONFIG := cyanogenmod_d851_defconfig
-TARGET_KERNEL_CUSTOM_TOOLCHAIN := arm-eabi-6.0
-#TARGET_KERNEL_CROSS_COMPILE_PREFIX := prebuilts/gcc/linux-x86/arm/arm-linux-gnueabi-4.9/bin/arm-eabi-
-# Rom ToolChains
-TARGET_ROM_CUSTOM_TOOLCHAIN := arm-linux-androideabi-5.2
-#TARGET_GCC_VERSION := 4.8
-#TARGET_TOOLS_PREFIX := prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.8/bin/arm-linux-androideabi-
-# RR Config Flags
-#TARGET_TC_ROM := SM-4.8
-#TARGET_TC_KERNEL := SM-4.9
-#TARGET_GCC_VERSION_EXP := $(TARGET_TC_ROM)
-#TARGET_KERNEL_CUSTOM_TOOLCHAIN := $(TARGET_TC_KERNEL)
 
 BOARD_BOOTIMAGE_PARTITION_SIZE := 16777216		# 16M
 BOARD_RECOVERYIMAGE_PARTITION_SIZE := 16777216		# 16M
