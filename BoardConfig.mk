@@ -61,7 +61,7 @@ TW_INCLUDE_CRYPTO := true
 BOARD_SUPPRESS_SECURE_ERASE := true
 RECOVERY_SDCARD_ON_DATA := true
 BOARD_HAS_NO_REAL_SDCARD := true
-TW_BRIGHTNESS_PATH := "/sys/devices/mdp.0/qcom\x2cmdss_fb_primary.175/leds/lcd-backlight/brightness"
+TW_BRIGHTNESS_PATH := "/sys/class/leds/lcd-backlight/brightness"
 TW_MAX_BRIGHTNESS := 255
 TW_SCREEN_BLANK_ON_BOOT := true
 # TW_NO_SCREEN_TIMEOUT := false
@@ -70,17 +70,20 @@ TW_SCREEN_BLANK_ON_BOOT := true
 TARGET_RECOVERY_IS_MULTIROM := true
 MR_INPUT_TYPE := type_b
 MR_INIT_DEVICES := device/lge/d851/multirom/mr_init_devices.c
-MR_RD_ADDR := 0x2200000
 MR_DPI := xhdpi
 MR_DPI_MUL := 1.5
+MR_DPI_FONT := 420
 MR_FSTAB := device/lge/d851/multirom/twrp.fstab
+MR_USE_MROM_FSTAB := true
 MR_KEXEC_MEM_MIN := 0x0ff00000
 MR_KEXEC_DTB := true
-MR_USE_MROM_FSTAB := true
-MR_DPI_FONT := 420
-MR_DEFAULT_BRIGHTNESS := 80
-#MR_CONTINUOUS_FB_UPDATE := true
-
-#MultiRom Hooks, So that we can run stock roms as secondary
+MR_RD_ADDR := 0x2200000
 MR_DEVICE_HOOKS := device/lge/d851/multirom/mr_hooks.c
 MR_DEVICE_HOOKS_VER := 4
+MR_DEFAULT_BRIGHTNESS := 80
+#MR_CONTINUOUS_FB_UPDATE := true
+MR_PIXEL_FORMAT := "RGBX_8888"
+MR_USE_QCOM_OVERLAY := true
+MR_QCOM_OVERLAY_HEADER := device/lge/d851/multirom/mr_qcom_overlay.h
+MR_QCOM_OVERLAY_CUSTOM_PIXEL_FORMAT := MDP_RGBX_8888
+

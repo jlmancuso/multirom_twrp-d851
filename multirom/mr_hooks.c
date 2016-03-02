@@ -6,88 +6,19 @@
 
 #include <stdio.h>
 #include <unistd.h>
-#include <dirent.h>
-#include <ctype.h>
-#include <string.h>
 #include <sys/stat.h>
+#include <stdint.h>
+#include <time.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
+#include <log.h>
 
 #if MR_DEVICE_HOOKS >= 1
 int mrom_hook_after_android_mounts(const char *busybox_path, const char *base_path, int type)
 {
-    // On M7, this fstab file is used to remount system to RO,
-    // but with MultiROM, it remounts everything as RO, even /data and /cache
-    if(access("/remount.qcom", F_OK) >= 0)
-        remove("/remount.qcom");
-
-    // remove mounting from .rc files
-    int res = -1;
-    int add_dummy = 0;
-    char *l;
-    char line[1024];
-    char path_in[128];
-    char path_out[128];
-    FILE *in, *out;
-    DIR *d;
-    struct dirent *dp;
-
-    d = opendir("/");
-    if(!d)
-        return -1;
-
-    while((dp = readdir(d)))
-    {
-        if(dp->d_type != DT_REG || !strstr(dp->d_name, ".rc"))
-            continue;
-
-        snprintf(path_out, sizeof(path_out), "/%s", dp->d_name);
-        snprintf(path_in, sizeof(path_in), "/%s.new", dp->d_name);
-
-        if(rename(path_out, path_in) < 0)
-            goto exit;
-
-        in = fopen(path_in, "r");
-        if(!in)
-            goto exit;
-
-        out = fopen(path_out, "w");
-        if(!out)
-        {
-            fclose(in);
-            goto exit;
-        }
-
-        while((fgets(line, sizeof(line), in)))
-        {
-            for(l = line; isspace(*l); ++l);
-
-            if (strncmp(l, "on ", 3) == 0)
-                add_dummy = 1;
-            else if (strstr(l, "mount ") &&
-                (strstr(l, "/data") || strstr(l, "/system") || strstr(l, "/cache")))
-            {
-                if(add_dummy == 1)
-                {
-                    add_dummy = 0;
-                    fputs("    export DUMMY_LINE_INGORE_IT 1\n", out);
-                }
-
-                fputc((int)'#', out);
-            }
-
-            fputs(line, out);
-        }
-
-        fclose(out);
-        fclose(in);
-        remove(path_in);
-
-        chmod(path_out, 0750);
-    }
-
-    res = 0;
-exit:
-    closedir(d);
-    return res;
+    return 0;
 }
 #endif /* MR_DEVICE_HOOKS >= 1 */
 
@@ -98,10 +29,103 @@ void mrom_hook_before_fb_close(void)
 }
 #endif /* MR_DEVICE_HOOKS >= 2 */
 
-
 #if MR_DEVICE_HOOKS >= 3
+static int read_file(const char *path, char *dest, int dest_size)
+{
+    int res = 0;
+    FILE *f = fopen(path, "r");
+    if(!f)
+        return res;
+
+    res = fgets(dest, dest_size, f) != NULL;
+    fclose(f);
+    return res;
+}
+
+static int write_file(const char *path, const char *what)
+{
+    int res = 0;
+    FILE *f = fopen(path, "w");
+    if(!f)
+        return res;
+
+    res = fputs(what, f) >= 0;
+    fclose(f);
+    return res;
+}
+
+static void set_cpu_governor(void)
+{
+    size_t i;
+    char buff[256];
+    static const char *governors[] = { "interactive", "ondemand" };
+
+    if(!read_file("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor", buff, sizeof(buff)))
+        return;
+
+    if(strncmp(buff, "performance", 11) != 0)
+        return;
+
+    if(!read_file("/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors", buff, sizeof(buff)))
+        return;
+
+    write_file("/sys/module/msm_thermal/core_control/enabled", "0");
+    write_file("/sys/devices/system/cpu/cpu1/online", "1");
+    write_file("/sys/devices/system/cpu/cpu2/online", "1");
+    write_file("/sys/devices/system/cpu/cpu3/online", "1");
+
+    for(i = 0; i < sizeof(governors)/sizeof(governors[0]); ++i)
+    {
+        if(strstr(buff, governors[i]))
+        {
+            write_file("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor", governors[i]);
+            write_file("/sys/devices/system/cpu/cpu1/cpufreq/scaling_governor", governors[i]);
+            write_file("/sys/devices/system/cpu/cpu2/cpufreq/scaling_governor", governors[i]);
+            write_file("/sys/devices/system/cpu/cpu3/cpufreq/scaling_governor", governors[i]);
+            break;
+        }
+    }
+
+    write_file("/sys/module/lpm_levels/enable_low_power/l2", "4");
+    write_file("/sys/module/msm_pm/modes/cpu0/power_collapse/suspend_enabled", "1");
+    write_file("/sys/module/msm_pm/modes/cpu1/power_collapse/suspend_enabled", "1");
+    write_file("/sys/module/msm_pm/modes/cpu2/power_collapse/suspend_enabled", "1");
+    write_file("/sys/module/msm_pm/modes/cpu3/power_collapse/suspend_enabled", "1");
+    write_file("/sys/module/msm_pm/modes/cpu0/power_collapse/idle_enabled", "1");
+    write_file("/sys/module/msm_pm/modes/cpu1/power_collapse/idle_enabled", "1");
+    write_file("/sys/module/msm_pm/modes/cpu2/power_collapse/idle_enabled", "1");
+    write_file("/sys/module/msm_pm/modes/cpu3/power_collapse/idle_enabled", "1");
+    write_file("/sys/module/msm_pm/modes/cpu0/standalone_power_collapse/suspend_enabled", "1");
+    write_file("/sys/module/msm_pm/modes/cpu1/standalone_power_collapse/suspend_enabled", "1");
+    write_file("/sys/module/msm_pm/modes/cpu2/standalone_power_collapse/suspend_enabled", "1");
+    write_file("/sys/module/msm_pm/modes/cpu3/standalone_power_collapse/suspend_enabled", "1");
+    write_file("/sys/module/msm_pm/modes/cpu0/standalone_power_collapse/idle_enabled", "1");
+    write_file("/sys/module/msm_pm/modes/cpu1/standalone_power_collapse/idle_enabled", "1");
+    write_file("/sys/module/msm_pm/modes/cpu2/standalone_power_collapse/idle_enabled", "1");
+    write_file("/sys/module/msm_pm/modes/cpu3/standalone_power_collapse/idle_enabled", "1");
+    write_file("/sys/module/msm_pm/modes/cpu0/retention/idle_enabled", "1");
+    write_file("/sys/module/msm_pm/modes/cpu1/retention/idle_enabled", "1");
+    write_file("/sys/module/msm_pm/modes/cpu2/retention/idle_enabled", "1");
+    write_file("/sys/module/msm_pm/modes/cpu3/retention/idle_enabled", "1");
+    write_file("/sys/module/msm_thermal/core_control/enabled", "1");
+    write_file("/sys/devices/system/cpu/cpufreq/interactive/io_is_busy", "1");
+
+    write_file("/sys/devices/system/cpu/cpufreq/interactive/above_hispeed_delay", "20000 1400000:40000 1700000:20000");
+    write_file("/sys/devices/system/cpu/cpufreq/interactive/go_hispeed_load", "90");
+    write_file("/sys/devices/system/cpu/cpufreq/interactive/hispeed_freq", "1497600");
+    write_file("/sys/devices/system/cpu/cpufreq/interactive/target_loads", "85 1500000:90 1800000:70");
+    write_file("/sys/devices/system/cpu/cpufreq/interactive/min_sample_time", "40000");
+    write_file("/sys/module/cpu_boost/parameters/boost_ms", "20");
+    write_file("/sys/module/cpu_boost/parameters/sync_threshold", "1728000");
+    write_file("/sys/devices/system/cpu/cpufreq/interactive/sampling_down_factor", "100000");
+    write_file("/sys/module/cpu_boost/parameters/input_boost_freq", "1497600");
+    write_file("/sys/module/cpu_boost/parameters/input_boost_ms", "40");
+}
+
 void tramp_hook_before_device_init(void)
 {
+    // G3's kernel has "performance" as default
+    set_cpu_governor();
 }
 #endif /* MR_DEVICE_HOOKS >= 3 */
 

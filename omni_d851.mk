@@ -34,6 +34,7 @@ PRODUCT_COPY_FILES += \
     device/lge/d851/kernel:kernel \
     device/lge/d851/dtb:dtb \
     device/lge/d851/img_info:img_info \
+    device/lge/d851/init.recovery.g3.rc:root/init.recovery.g3.rc \
     device/lge/d851/multirom/postrecoveryboot.sh:recovery/root/sbin/postrecoveryboot.sh \
     device/lge/d851/multirom/sign:recovery/root/res/sign
 
@@ -45,6 +46,12 @@ PRODUCT_DEVICE := d851
 PRODUCT_BRAND := LG
 PRODUCT_MODEL := G3
 PRODUCT_MANUFACTURER := LG
+
+PRODUCT_BUILD_PROP_OVERRIDES += \
+    PRODUCT_DEVICE="g3" \
+    PRODUCT_NAME="g3_tmo_us" \
+    BUILD_FINGERPRINT="lge/g3_tmo_us/g3:5.0.1/LRX21Y/15227151285fc:user/release-keys" \
+    PRIVATE_BUILD_DESC="g3_tmo_us-user 5.0.1 LRX21Y 15227151285fc release-keys"
 
 # Kernel inline build
 #TARGET_KERNEL_CONFIG := d851_defconfig

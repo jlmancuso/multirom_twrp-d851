@@ -7,13 +7,36 @@
 // You can use * at the end to init this folder and all its subfolders
 const char *mr_init_devices[] =
 {
-	"/sys/class/graphics/fb0",
-"/sys/class/misc/android_adb",
-"/sys/class/android_usb/android0/f_adb",
-"/sys/class/tty/ptmx",
-"/sys/class/misc/uinput",
-"/sys/bus*",
-"/sys/devices*",
-NULL
+		"/sys/class/graphics/fb0",
+
+		"/sys/block/mmcblk0",
+		"/sys/devices/msm_sdcc.1",
+		"/sys/devices/msm_sdcc.1*",
+		"/sys/bus/mmc",
+		"/sys/bus/mmc/drivers/mmcblk",
+		"/sys/bus/sdio/drivers/bcmsdh_sdmmc",
+		"/sys/module/mmcblk",
+
+		// SDCard
+		"/sys/devices/msm_sdcc.3",
+		"/sys/devices/msm_sdcc.3*",
+
+		// USB drive
+		"/sys/bus/platform/drivers/xhci-hcd*",
+
+		"/sys/devices/gpio_keys.83/input*",
+		"/sys/devices/virtual/input*",
+		"/sys/devices/virtual/misc/uinput",
+
+		// for adb
+		"/sys/devices/virtual/tty/ptmx",
+		"/sys/devices/virtual/misc/android_adb",
+		"/sys/devices/virtual/android_usb/android0/f_adb",
+		"/sys/bus/usb",
+
+		// for qualcomm overlay - /dev/ion
+		"/sys/devices/virtual/misc/ion",
+
+		NULL
 };
 
