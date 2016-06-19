@@ -66,6 +66,10 @@ TW_MAX_BRIGHTNESS := 255
 TW_SCREEN_BLANK_ON_BOOT := true
 # TW_NO_SCREEN_TIMEOUT := false
 
+# MultiROM Recovery Version
+MR_REC_VERSION := $(shell date -u +%Y%m%d)
+BOARD_MKBOOTIMG_ARGS += --board mrom$(MR_REC_VERSION)-00
+
 # MultiROM
 TARGET_RECOVERY_IS_MULTIROM := true
 MR_INPUT_TYPE := type_b
